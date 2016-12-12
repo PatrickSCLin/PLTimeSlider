@@ -56,6 +56,44 @@ fileprivate func PointInClock(center: CGPoint, radius: CGFloat, angle: CGFloat) 
     
 }
 
+fileprivate func HourInClock(angle: CGFloat) -> UInt {
+    
+    if angle > 360 {
+        
+        return UInt(round((angle - 360) / 360 * 12) + 12)
+        
+    }
+        
+    else {
+        
+        return UInt(round(angle / 360 * 12))
+        
+    }
+    
+}
+
+fileprivate func DeltaOfAngle(last: CGFloat, current: CGFloat) -> CGFloat {
+    
+    if last < 90 && current > 270 {
+        
+        return (current - 360)
+        
+    }
+    
+    else if last > 270 && current < 90 {
+        
+        return (360 + current) - last
+        
+    }
+    
+    else {
+        
+        return current - last
+        
+    }
+    
+}
+
 public enum PLTimeSliderValueType {
     
     case start, end
@@ -80,9 +118,21 @@ public protocol PLTimeSliderDelegate: NSObjectProtocol {
     
     var endThumb: PLTimeSliderThumb!
     
-    var startHour: UInt = 12
+    var startAngle: CGFloat = 0
     
-    var endHour: UInt = 12
+    var endAngle: CGFloat = 0
+    
+    var startHour: UInt {
+        
+        return HourInClock(angle: self.startAngle)
+    
+    }
+    
+    var endHour: UInt {
+        
+        return HourInClock(angle: self.endAngle)
+        
+    }
     
     var startBtnGesture: UIPanGestureRecognizer!
     
@@ -94,7 +144,7 @@ public protocol PLTimeSliderDelegate: NSObjectProtocol {
     
     // MARK: Gesture Methods
     
-    func tap(_ gesture: UITapGestureRecognizer) {
+    func pan(_ gesture: UIPanGestureRecognizer) {
         
         switch gesture.state {
             
@@ -108,13 +158,11 @@ public protocol PLTimeSliderDelegate: NSObjectProtocol {
             
             print("ended")
             
-            if let thumb = gesture.view as? PLTimeSliderThumb {
-                
-                if thumb == self.startThumb { self.updateThumbLayout(thumb: self.startThumb, hour: self.startHour) }
-                    
-                else if thumb == self.endThumb { self.updateThumbLayout(thumb: self.endThumb, hour: self.endHour) }
-                
-            }
+//            guard let thumb = gesture.view as? PLTimeSliderThumb else { return }
+//            
+//            if thumb == self.startThumb { self.updateThumbLayout(thumb: self.startThumb, hour: self.startHour) }
+//                
+//            else if thumb == self.endThumb { self.updateThumbLayout(thumb: self.endThumb, hour: self.endHour) }
             
             break
             
@@ -122,35 +170,49 @@ public protocol PLTimeSliderDelegate: NSObjectProtocol {
             
             print("changed")
             
+            guard let thumb = gesture.view as? PLTimeSliderThumb else { return }
+            
             let center = CGPoint(x: self.bounds.width / 2, y: self.bounds.height / 2)
             
             let point = gesture.location(in: self)
             
             let angle = AngleInClock(center: center, point: point)
             
-            self.updateThumbLayout(thumb: gesture.view as! PLTimeSliderThumb, angle: angle)
+            if thumb == self.endThumb {
+                
+                let last_angle = (self.endAngle > 360) ? (self.endAngle - 360) : self.endAngle
+                
+                let new_angle = self.endAngle + DeltaOfAngle(last: last_angle, current: angle)
+                
+                if new_angle < 0 { return }
+                
+                if new_angle < self.startAngle { return }
+                
+                if new_angle > 720 { return }
+                
+                self.endAngle = new_angle
+                
+                self.updateThumbLayout(thumb: thumb, angle: self.endAngle)
+                
+                self.delegate?.slider(slider: self, valueDidChanged: self.endHour, type: .end)
+                
+            }
             
-            if let thumb = gesture.view as? PLTimeSliderThumb {
+            else if thumb == self.startThumb {
                 
-                var hour = UInt(round((angle / 360) * 12))
+                let last_angle = (self.startAngle > 360) ? (self.startAngle - 360) : self.startAngle
                 
-                if hour == 0 { hour = 12 }
+                let new_angle = self.startAngle + DeltaOfAngle(last: last_angle, current: angle)
                 
-                if thumb == self.startThumb {
-                    
-                    self.startHour = hour
+                if new_angle < 0 { return }
                 
-                    self.delegate?.slider(slider: self, valueDidChanged: self.startHour, type: .start)
+                if new_angle > self.endAngle { return }
                 
-                }
+                self.startAngle = new_angle
                 
-                else if thumb == self.endThumb {
-                    
-                    self.endHour = hour
-                    
-                    self.delegate?.slider(slider: self, valueDidChanged: self.endHour, type: .end)
+                self.updateThumbLayout(thumb: thumb, angle: self.startAngle)
                 
-                }
+                self.delegate?.slider(slider: self, valueDidChanged: self.startHour, type: .start)
                 
             }
             
@@ -174,7 +236,13 @@ public protocol PLTimeSliderDelegate: NSObjectProtocol {
     
     func updateThumbLayout(thumb: PLTimeSliderThumb, hour: UInt) {
         
-        let angle = (0.5 * CGFloat(60 * hour))
+        var display_hour = hour
+        
+        if hour == 0 { display_hour = 12 }
+        
+        else if hour > 12 { display_hour = hour - 12 }
+        
+        let angle = (0.5 * CGFloat(60 * display_hour))
         
         self.updateThumbLayout(thumb: thumb, angle: angle)
         
@@ -234,9 +302,9 @@ public protocol PLTimeSliderDelegate: NSObjectProtocol {
     
     func commonInit() {
         
-        self.startBtnGesture = UIPanGestureRecognizer(target: self, action: #selector(PLTimeSlider.tap(_:)))
+        self.startBtnGesture = UIPanGestureRecognizer(target: self, action: #selector(PLTimeSlider.pan(_:)))
         
-        self.endBtnGesture = UIPanGestureRecognizer(target: self, action: #selector(PLTimeSlider.tap(_:)))
+        self.endBtnGesture = UIPanGestureRecognizer(target: self, action: #selector(PLTimeSlider.pan(_:)))
         
         self.startThumb = PLTimeSliderThumb()
         
