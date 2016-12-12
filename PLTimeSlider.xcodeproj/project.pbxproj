@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CDA39C101DFE83BF0099763B /* PLTimeSliderThumb.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDA39C0F1DFE83BF0099763B /* PLTimeSliderThumb.swift */; };
 		CDC3E47C1DFA7FC700811CFF /* PLTimeSlider.h in Headers */ = {isa = PBXBuildFile; fileRef = CDC3E47A1DFA7FC700811CFF /* PLTimeSlider.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		CDC3E4891DFA7FD800811CFF /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDC3E4881DFA7FD800811CFF /* AppDelegate.swift */; };
 		CDC3E48B1DFA7FD800811CFF /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDC3E48A1DFA7FD800811CFF /* ViewController.swift */; };
@@ -43,6 +44,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		CDA39C0F1DFE83BF0099763B /* PLTimeSliderThumb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PLTimeSliderThumb.swift; sourceTree = "<group>"; };
 		CDC3E4771DFA7FC700811CFF /* PLTimeSlider.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = PLTimeSlider.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		CDC3E47A1DFA7FC700811CFF /* PLTimeSlider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PLTimeSlider.h; sourceTree = "<group>"; };
 		CDC3E47B1DFA7FC700811CFF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -98,6 +100,7 @@
 			children = (
 				CDC3E47A1DFA7FC700811CFF /* PLTimeSlider.h */,
 				CDC3E4981DFA7FE800811CFF /* PLTimeSlider.swift */,
+				CDA39C0F1DFE83BF0099763B /* PLTimeSliderThumb.swift */,
 				CDC3E47B1DFA7FC700811CFF /* Info.plist */,
 			);
 			path = PLTimeSlider;
@@ -234,6 +237,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CDA39C101DFE83BF0099763B /* PLTimeSliderThumb.swift in Sources */,
 				CDC3E4991DFA7FE800811CFF /* PLTimeSlider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -462,6 +466,7 @@
 				CDC3E4811DFA7FC700811CFF /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		CDC3E4951DFA7FD800811CFF /* Build configuration list for PBXNativeTarget "PLTimeSliderDemo" */ = {
 			isa = XCConfigurationList;
@@ -470,6 +475,7 @@
 				CDC3E4971DFA7FD800811CFF /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
