@@ -48,9 +48,9 @@ fileprivate func AngleInClock(center: CGPoint, point: CGPoint) -> CGFloat {
 
 fileprivate func PointInClock(center: CGPoint, radius: CGFloat, angle: CGFloat) -> CGPoint {
     
-    let x = round(center.x + (radius * cos(ToRadian(degree: (angle - 90)))))
+    let x = center.x + radius * cos(ToRadian(degree: angle - 90))
     
-    let y = round(center.y + (radius * sin(ToRadian(degree: (angle - 90)))))
+    let y = center.y + radius * sin(ToRadian(degree: angle - 90))
     
     return CGPoint(x: x, y: y)
     
