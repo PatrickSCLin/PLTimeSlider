@@ -17,6 +17,8 @@ class ViewController: UIViewController, PLTimeSliderDelegate {
     
     @IBOutlet var endLable: UILabel!
     
+    @IBOutlet var totalLabel: UILabel!
+    
     // MARK: Time Slider Methods
     
     func slider(slider: PLTimeSlider, valueDidChanged value: UInt, type: PLTimeSliderValueType) {
@@ -25,16 +27,34 @@ class ViewController: UIViewController, PLTimeSliderDelegate {
             
             self.startLable.text = String(format: "%02d:00", value)
             
+            self.monoFont(label: self.startLable, weight: UIFontWeightBold)
+            
         }
         
         else if type == .end {
             
             self.endLable.text = String(format: "%02d:00", value)
             
+            self.monoFont(label: self.endLable, weight: UIFontWeightBold)
+            
         }
         
+        let total = slider.endHour - slider.startHour
+        
+        self.totalLabel.text = "\(total)  Hours"
+        
+        self.monoFont(label: self.totalLabel, weight: UIFontWeightBold)
+        
     }
-
+    
+    // MARK: Interal Methods
+    
+    func monoFont(label: UILabel, weight: CGFloat) {
+        
+        label.font = UIFont.monospacedDigitSystemFont(ofSize: label.font.pointSize, weight: weight)
+        
+    }
+    
     // MARK: Init Methods
     
     override func viewDidLoad() {

@@ -14,6 +14,8 @@ import UIKit
         
         super.layoutSubviews()
         
+        self.layoutIfNeeded()
+        
     }
     
     override func draw(_ rect: CGRect) {
@@ -26,7 +28,7 @@ import UIKit
         
         UIColor.white.setFill()
         
-        UIBezierPath(ovalIn: rect.insetBy(dx: 1, dy: 1)).fill()
+        UIBezierPath(ovalIn: rect.insetBy(dx: 0, dy: 0)).fill()
         
     }
     

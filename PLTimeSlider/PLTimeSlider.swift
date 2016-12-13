@@ -72,6 +72,20 @@ fileprivate func HourInClock(angle: CGFloat) -> UInt {
     
 }
 
+fileprivate func AngleInHour(hour: UInt) -> CGFloat {
+    
+    var display_hour = hour
+    
+    if hour == 0 { display_hour = 12 }
+        
+    else if hour > 12 { display_hour = hour - 12 }
+    
+    let angle = (0.5 * CGFloat(60 * display_hour))
+    
+    return angle
+    
+}
+
 fileprivate func DeltaOfAngle(last: CGFloat, current: CGFloat) -> CGFloat {
     
     if last < 90 && current > 270 {
@@ -108,9 +122,13 @@ public protocol PLTimeSliderDelegate: NSObjectProtocol {
 
 @IBDesignable public class PLTimeSlider: UIView {
     
-    @IBInspectable var lineWidth: CGFloat = 30
+    @IBInspectable public var thumbWidth: CGFloat = 40
     
-    @IBInspectable var strokeColor: UIColor = UIColor.lightGray
+    @IBInspectable public var lineWidth: CGFloat = 40
+    
+    @IBInspectable public var strokeColor: UIColor = UIColor.lightGray
+    
+    @IBInspectable public var fillColor: UIColor = UIColor.orange
     
     public weak var delegate: PLTimeSliderDelegate?
     
@@ -122,15 +140,39 @@ public protocol PLTimeSliderDelegate: NSObjectProtocol {
     
     var endAngle: CGFloat = 0
     
-    var startHour: UInt {
+    @IBInspectable public var startHour: UInt {
         
-        return HourInClock(angle: self.startAngle)
+        set {
+            
+            self.startAngle = CGFloat(360 / 12 * newValue)
+            
+            self.layoutSubviews()
+            
+        }
+        
+        get {
+            
+            return HourInClock(angle: self.startAngle)
+            
+        }
     
     }
     
-    var endHour: UInt {
+    @IBInspectable public var endHour: UInt {
         
-        return HourInClock(angle: self.endAngle)
+        set {
+            
+            self.endAngle = CGFloat(360 / 12 * newValue)
+            
+            self.layoutSubviews()
+            
+        }
+        
+        get {
+            
+            return HourInClock(angle: self.endAngle)
+            
+        }
         
     }
     
@@ -139,6 +181,8 @@ public protocol PLTimeSliderDelegate: NSObjectProtocol {
     var endBtnGesture: UIPanGestureRecognizer!
     
     var path: UIBezierPath!
+    
+    var arcLayer: CAShapeLayer!
     
     var isInit: Bool = false
     
@@ -150,25 +194,45 @@ public protocol PLTimeSliderDelegate: NSObjectProtocol {
             
         case .began:
             
-            print("began")
-            
             break
             
         case .ended:
             
-            print("ended")
+            guard let thumb = gesture.view as? PLTimeSliderThumb else { return }
             
-//            guard let thumb = gesture.view as? PLTimeSliderThumb else { return }
-//            
-//            if thumb == self.startThumb { self.updateThumbLayout(thumb: self.startThumb, hour: self.startHour) }
-//                
-//            else if thumb == self.endThumb { self.updateThumbLayout(thumb: self.endThumb, hour: self.endHour) }
+            if thumb == self.startThumb {
+                
+                self.updateThumbLayout(thumb: self.startThumb, hour: self.startHour)
+                
+                self.startAngle = CGFloat(self.startHour * (360 / 12))
+            
+            }
+                
+            else if thumb == self.endThumb {
+                
+                self.updateThumbLayout(thumb: self.endThumb, hour: self.endHour)
+                
+                self.endAngle = CGFloat(self.endHour * (360 / 12))
+            
+            }
+            
+            var startAngle = AngleInHour(hour: self.startHour)
+            
+            var endAngle = AngleInHour(hour: self.endHour)
+            
+            if (self.startHour == 0 && self.endHour == 12) || (self.startHour == 12 && self.endHour == 24) || (self.startHour == 0 && self.endHour == 24) {
+                
+                startAngle = 0
+                
+                endAngle = 360
+                
+            }
+            
+            self.updateArcPath(startAngle: startAngle, endAngle: endAngle)
             
             break
             
         case .changed:
-            
-            print("changed")
             
             guard let thumb = gesture.view as? PLTimeSliderThumb else { return }
             
@@ -184,9 +248,25 @@ public protocol PLTimeSliderDelegate: NSObjectProtocol {
                 
                 let new_angle = self.endAngle + DeltaOfAngle(last: last_angle, current: angle)
                 
-                if new_angle < 0 { return }
+                if new_angle < 0 {
                 
-                if new_angle < self.startAngle { return }
+                    self.endAngle = 0
+                    
+                    self.updateThumbLayout(thumb: thumb, angle: self.endAngle)
+                    
+                    return
+                
+                }
+                
+                if new_angle < self.startAngle {
+                
+                    self.endAngle = self.startAngle
+                    
+                    self.updateThumbLayout(thumb: thumb, angle: self.endAngle)
+                    
+                    return
+                
+                }
                 
                 if new_angle > 720 { return }
                 
@@ -204,9 +284,25 @@ public protocol PLTimeSliderDelegate: NSObjectProtocol {
                 
                 let new_angle = self.startAngle + DeltaOfAngle(last: last_angle, current: angle)
                 
-                if new_angle < 0 { return }
+                if new_angle < 0 {
                 
-                if new_angle > self.endAngle { return }
+                    self.startAngle = 0
+                    
+                    self.updateThumbLayout(thumb: thumb, angle: self.startAngle)
+                    
+                    return
+                
+                }
+                
+                if new_angle > self.endAngle {
+                
+                    self.startAngle = self.endAngle
+                    
+                    self.updateThumbLayout(thumb: thumb, angle: self.startAngle)
+                    
+                    return
+                
+                }
                 
                 self.startAngle = new_angle
                 
@@ -219,8 +315,6 @@ public protocol PLTimeSliderDelegate: NSObjectProtocol {
             break
             
         case .cancelled:
-            
-            print("cancelled")
             
             break
             
@@ -260,9 +354,35 @@ public protocol PLTimeSliderDelegate: NSObjectProtocol {
         
         let point = PointInClock(center: center, radius: radius, angle: angle)
         
-        thumb.frame = CGRect(x: 0, y: 0, width: self.lineWidth, height: self.lineWidth)
+        thumb.frame = CGRect(x: 0, y: 0, width: self.thumbWidth, height: self.thumbWidth)
         
         thumb.center = point
+        
+        let startAngle = (self.startAngle > 360) ? (self.startAngle - 360) : self.startAngle
+        
+        let endAngle = (self.endAngle > 360) ? (self.endAngle - 360) : self.endAngle
+        
+        self.updateArcPath(startAngle: startAngle, endAngle: endAngle)
+        
+    }
+    
+    func updateArcPath(startAngle: CGFloat, endAngle: CGFloat) {
+        
+        let inset = self.lineWidth / 2
+        
+        let rect = self.bounds.insetBy(dx: inset, dy: inset)
+        
+        let center = CGPoint(x: self.bounds.width / 2, y: self.bounds.height / 2)
+        
+        let radius = rect.width / 2
+        
+        self.arcLayer.path = UIBezierPath(arcCenter: center, radius: radius, startAngle: ToRadian(degree: startAngle - 90), endAngle: ToRadian(degree: endAngle - 90), clockwise: true).cgPath
+        
+        self.arcLayer.fillColor = UIColor.clear.cgColor
+        
+        self.arcLayer.strokeColor = self.fillColor.cgColor
+        
+        self.arcLayer.lineWidth = self.lineWidth
         
     }
     
@@ -306,9 +426,13 @@ public protocol PLTimeSliderDelegate: NSObjectProtocol {
         
         self.endBtnGesture = UIPanGestureRecognizer(target: self, action: #selector(PLTimeSlider.pan(_:)))
         
-        self.startThumb = PLTimeSliderThumb()
+        self.arcLayer = CAShapeLayer()
         
-        self.endThumb = PLTimeSliderThumb()
+        self.startThumb = PLTimeSliderThumb(frame: CGRect(x: 0, y: 0, width: self.thumbWidth, height: self.thumbWidth))
+        
+        self.endThumb = PLTimeSliderThumb(frame: CGRect(x: 0, y: 0, width: self.thumbWidth, height: self.thumbWidth))
+        
+        self.layer.addSublayer(self.arcLayer)
         
         self.addSubview(self.startThumb)
         
